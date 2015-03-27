@@ -153,6 +153,11 @@
     </dependency>
 
       <dependency>
+          <groupId>nl.surfnet.apis</groupId>
+          <artifactId>apis-httpheader-authn</artifactId>
+      </dependency>
+
+      <dependency>
           <groupId>org.jasig.cas.client</groupId>
           <artifactId>cas-client-core</artifactId>
           <version>3.3.1</version>

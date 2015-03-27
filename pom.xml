@@ -72,7 +72,7 @@
     <module>apis-example-client-app</module>
     <module>apis-openconext-mock-war</module>
     <module>apis-authorization-server-dist</module>
-      <module>apis-httpheader-authn</module>
+    <module>apis-httpheader-authn</module>
   </modules>
 
   <properties>
@@ -319,6 +319,11 @@
       <dependency>
         <groupId>nl.surfnet.apis</groupId>
         <artifactId>apis-surfconext-authn</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>nl.surfnet.apis</groupId>
+        <artifactId>apis-httpheader-authn</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

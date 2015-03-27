@@ -83,7 +83,7 @@
         <version>${jetty-maven-plugin.version}</version>
         <configuration>
           <webAppConfig>
-            <contextPath>/</contextPath>
+            <contextPath>/testlicht</contextPath>
             <extraClasspath>${basedir}/src/test/resources/</extraClasspath>
           </webAppConfig>
           <connectors>

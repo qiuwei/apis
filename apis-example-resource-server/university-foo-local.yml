@@ -9,7 +9,7 @@ logging:
     "openjpa": error
     
 auth:
-  authorizationServerUrl: http://localhost:8080/v1/tokeninfo
-  secret: 58b749f7-acb3-44b7-a38c-53d5ad740cf6
-  key: university-foo
+  authorizationServerUrl: https://weblicht.sfs.uni-tuebingen.de/apis/v1/tokeninfo
+  secret: 5d16a7d8-ec74-49bd-8c76-81150a0f49ec
+  key: 180658ba-39b6-488a-b1bb-e40300b9771e
    
