@@ -48,12 +48,12 @@
 </head>
 <body>
     <div class="head">
-      <img src="<c:url value="/assets/img/surf-oauth.png"/>" />
+        <h1>Testlicht</h1>
     </div>
     <div class="subcontent">
 	<div class="row">
 		<div class="span11 columns">
-			<p>The client app simulates a (native) application that first obtaines an Access Token from the Authorization Server and then uses the example Resource Server to access protected resources.</p>
+			<p>The client app simulates a (native) application that first obtaines an Access Token from the Authorization Server and then uses it to access protected resources on ownCloud.</p>
 		</div>
 	</div>
 
@@ -134,8 +134,7 @@
 										<div class="controls break-word">
 											<form:textarea path="authorizationURLComplete" id="authorizationURLComplete" name="authorizationURLComplete"
 												rows="5" class="input-xxlarge" readonly="true"/>
-											<p class="help-block">This is the URL to redirect to for user authentication. It is based on the authorization url of the Authorization Server and the registered client 
-													in /apis-authorization-server/src/main/resources/db/migration/hsqldb/V1__auth-server-admin.sql</p>	
+											<p class="help-block">This is the URL to redirect to for user authentication. </p>
 										</div>
 									</div>
 									<div class="form-actions">
@@ -170,21 +169,15 @@
 										<div class="controls">
 											<form:input path="requestURL" id="requestURL"
 												name="requestURL" class="input-xxlarge" />
-											<p class="help-block">An endpoint on the example Resource server</p>
+											<p class="help-block">An endpoint on ownCloud</p>
 											<p class="help-block">Hint:
-												http://localhost:8180/v1/api/course</p>
-											<p class="help-block">Hint:
-												http://localhost:8180/v1/api/course/cs3</p>
-											<p class="help-block">Hint:
-												http://localhost:8180/v1/api/student</p>
-											<p class="help-block">Hint:
-												http://localhost:8180/v1/api/student/foo5</p>
+												https://weblicht.sfs.uni-tuebingen.de/owncloud/remote.php/odav/</p>
 										</div>
 									</div>
-									<div class="form-actions">
-										<button id="step3" name="step3" class="btn btn-primary">Fetch</button>
-										<button name="reset" class="btn">Reset</button>
-									</div>
+                                    <div class="form-actions">
+                                        <button id="step3" name="step3" class="btn btn-primary">Fetch</button>
+                                        <button name="reset" class="btn">Reset</button>
+                                    </div>
 								</fieldset>
 							</div>
 						</div>
@@ -192,6 +185,10 @@
 				</div>
 				<input id="step" type="hidden"
 					value="<c:out value="${settings.step}"/>" name="step" />
+			</form:form>
+			<form:form method="POST" commandName="fileUploadForm" enctype="multipart/form-data">
+				Please select a file to upload: <input type="file" name="file" />
+				<input type="submit" value="upload" />
 			</form:form>
 		</div>
 		<div class="span5 columns">
@@ -206,6 +203,9 @@
 			<div id="raw-response">
 				<div class="alert alert-info alert-http">HTTP Response Body </div>
 				<pre id="rawResponseInfo" class="prettyprint pre-scrollable pre-json"><c:out value="${rawResponseInfo}" /></pre>
+			</div>
+			<div id="preview">
+				<div class="alert alert-info alert-http">Priview of HTTP Response Body </div>
 			</div>
 		</div>
 	</div>

@@ -20,6 +20,7 @@ package org.surfnet.oaaas.example.api;
 
 import javax.ws.rs.core.HttpHeaders;
 
+import com.sun.jersey.api.client.filter.LoggingFilter;
 import org.apache.commons.codec.binary.Base64;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.surfnet.oaaas.auth.ObjectMapperProvider;
@@ -66,6 +67,7 @@ public class OAuthAuthenticator implements Authenticator<String, AuthenticatedPr
    */
   @Override
   public Optional<AuthenticatedPrincipal> authenticate(String accessToken) throws AuthenticationException {
+    client.addFilter(new LoggingFilter(System.out));
     String json = client
         .resource(String.format(authorizationServerUrl.concat("?access_token=%s"), accessToken))
         .header(HttpHeaders.AUTHORIZATION, authorizationValue).accept("application/json")
@@ -73,6 +75,8 @@ public class OAuthAuthenticator implements Authenticator<String, AuthenticatedPr
     final VerifyTokenResponse response;
     try {
       response = mapper.readValue(json, VerifyTokenResponse.class);
+      System.out.println(accessToken);
+      System.out.println(json);
     } catch (IOException e) {
       throw new AuthenticationException("Could not parse JSON: "+ json, e);
     }

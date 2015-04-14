@@ -150,6 +150,7 @@ public class SAMLAuthenticator extends AbstractAuthenticator {
   public void authenticate(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
                            String authStateValue, String returnUri) throws IOException, ServletException {
     LOG.debug("Hitting SAML Authenticator filter");
+    LOG.debug("The auth state is {}", authStateValue);
     if (isSAMLResponse(request)) {
       Response samlResponse = extractSamlResponse(request);
       SAMLAuthenticatedPrincipal principal = (SAMLAuthenticatedPrincipal) openSAMLContext.assertionConsumer().consume(samlResponse);
@@ -164,6 +165,7 @@ public class SAMLAuthenticator extends AbstractAuthenticator {
     } else if (isOAuthCallback(request)) {
       SAMLAuthenticatedPrincipal principal = (SAMLAuthenticatedPrincipal) request.getSession().getAttribute(PRINCIPAL_FROM_SAML);
       String authState = (String) request.getSession().getAttribute(RELAY_STATE_FROM_SAML);
+      LOG.debug("The relay state is {}", authState);
       if (principal == null) { //huh
         throw new ServiceProviderAuthenticationException("No principal anymore in the session");
       }

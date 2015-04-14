@@ -32,13 +32,19 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.util.Assert;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.surfnet.oaaas.model.File;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -54,6 +60,7 @@ import java.util.HashMap;
 @Controller
 public class ClientController {
 
+  private static final Logger LOG = LoggerFactory.getLogger(ClientController.class);
   private static final String AUTHORIZATION = "Authorization";
   private static final String SETTINGS = "settings";
   private static final String BR = System.getProperty("line.separator");
@@ -63,6 +70,14 @@ public class ClientController {
   private Client client;
 
   private Environment env;
+
+  @Autowired
+  FileValidator validator;
+
+  @InitBinder("File")
+  private void initBinder(WebDataBinder binder) {
+    binder.setValidator(validator);
+  }
 
   /**
    * @param env
@@ -75,15 +90,29 @@ public class ClientController {
     this.env = env;
   }
 
+  @RequestMapping(value={"test"}, method = RequestMethod.GET, params = "upload")
+  public String getForm(ModelMap modelMap, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    File fileModel = new File();
+    modelMap.addAttribute("file", fileModel);
+    return "oauth-client";
+  }
+
+  @RequestMapping(value={"test"}, method = RequestMethod.POST, params = "upload")
+  public String fileUploaded(ModelMap modelMap, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    return "oauth-client";
+  }
+
   @RequestMapping(value = {"test"}, method = RequestMethod.GET)
   public String start(ModelMap modelMap, HttpServletRequest request, HttpServletResponse response)
           throws IOException {
+    LOG.debug("Hitting testlicht homepage");
     modelMap.addAttribute(SETTINGS, createDefaultSettings(false));
     return "oauth-client";
   }
 
-  @RequestMapping(value = "/test", method = RequestMethod.POST, params = "reset")
+  @RequestMapping(value = "test", method = RequestMethod.POST, params = "reset")
   public String reset(ModelMap modelMap, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    LOG.debug("Hitting reset");
     return start(modelMap, request, response);
   }
 
@@ -91,6 +120,7 @@ public class ClientController {
   @RequestMapping(value = "test", method = RequestMethod.POST, params = "step1")
   public String step1(ModelMap modelMap, @ModelAttribute("settings")
   ClientSettings settings, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    LOG.debug("Hitting step1");
     settings.setStep("step2");
     modelMap.addAttribute(SETTINGS, settings);
     return "oauth-client";
@@ -99,12 +129,15 @@ public class ClientController {
   @RequestMapping(value = "test", method = RequestMethod.POST, params = "step2")
   public void step2(ModelMap modelMap, @ModelAttribute("settings")
   ClientSettings settings, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    LOG.debug("Hitting step2");
+    LOG.debug("Redirect Uri is: {}", env.getProperty("redirect_uri"));
     response.sendRedirect(settings.getAuthorizationURLComplete());
   }
 
   @RequestMapping(value = "redirect", method = RequestMethod.GET)
   public String redirect(ModelMap modelMap, HttpServletRequest request, HttpServletResponse response)
           throws JsonParseException, JsonMappingException, IOException {
+    LOG.debug("Hitting redirect");
     String code = request.getParameter("code");
     ClientSettings settings = createDefaultSettings(false);
 
@@ -136,6 +169,7 @@ public class ClientController {
   @RequestMapping(value = "test", method = RequestMethod.POST, params = "step3")
   public String step3(ModelMap modelMap, @ModelAttribute("settings")
   ClientSettings settings, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    LOG.debug("Hitting step3");
     Builder builder = client.resource(settings.getRequestURL())
             .header(AUTHORIZATION, "bearer ".concat(settings.getAccessToken()))
             .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE);
