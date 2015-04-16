@@ -18,6 +18,8 @@
  */
 package org.surfnet.oaaas.web;
 
+import org.springframework.web.multipart.MultipartFile;
+
 /**
  * Form object for the test page
  * 
@@ -33,6 +35,7 @@ public class ClientSettings {
   private String requestURL;
   private boolean implicitGrant;
   private String accessToken;
+  private MultipartFile fileUpload;
 
   public ClientSettings() {
     super();
@@ -182,4 +185,11 @@ public class ClientSettings {
     this.accessToken = accessToken;
   }
 
+  public MultipartFile getFileUpload() {
+    return fileUpload;
+  }
+
+  public void setFileUpload(MultipartFile fileUpload) {
+    this.fileUpload = fileUpload;
+  }
 }

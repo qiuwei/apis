@@ -60,7 +60,7 @@
 	<div class="row">
 		<div class="span7 columns">
 			<form:form action="test" commandName="settings"
-				method="post" class="form-horizontal">
+				method="post" enctype="multipart/form-data" class="form-horizontal">
 				<div class="accordion" id="mainOptions">
 					<div class="accordion-group">
 						<div class="accordion-heading">
@@ -178,6 +178,17 @@
                                         <button id="step3" name="step3" class="btn btn-primary">Fetch</button>
                                         <button name="reset" class="btn">Reset</button>
                                     </div>
+									<div class="control-group">
+										<label class="control-label" for="requestURL">File to upload</label>
+										<div class="controls">
+											<form:input type="file" path="fileUpload" id="fileUpload"
+														name="fileUpload" class="input-xxlarge" />
+											<p class="help-block"><c:out value="${uploadMessage}" default="Select the file you want to upload to ownCloud here."/></p>
+										</div>
+									</div>
+									<div class="form-actions">
+										<button id="upload" name="upload" class="btn btn-primary">Upload</button>
+										<button name="reset" class="btn">Reset</button>
 								</fieldset>
 							</div>
 						</div>
@@ -185,10 +196,6 @@
 				</div>
 				<input id="step" type="hidden"
 					value="<c:out value="${settings.step}"/>" name="step" />
-			</form:form>
-			<form:form method="POST" commandName="fileUploadForm" enctype="multipart/form-data">
-				Please select a file to upload: <input type="file" name="file" />
-				<input type="submit" value="upload" />
 			</form:form>
 		</div>
 		<div class="span5 columns">
@@ -211,7 +218,7 @@
 	</div>
 	</div>
 <div class="foot">
-  <p>Powered by <a href="http://www.surfnet.nl/">SURFnet</a>. Fork me on <a href="https://github.com/oharsta/apis/">Github</a>. Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a>.</p>
+  <p>Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a>.</p>
 </div>
 
 </body>

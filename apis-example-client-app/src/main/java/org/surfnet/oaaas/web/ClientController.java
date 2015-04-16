@@ -18,6 +18,8 @@
  */
 package org.surfnet.oaaas.web;
 
+import com.github.sardine.Sardine;
+import com.github.sardine.SardineFactory;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.PartialRequestBuilder;
@@ -34,22 +36,20 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.util.Assert;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.surfnet.oaaas.model.File;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -64,6 +64,8 @@ public class ClientController {
   private static final String AUTHORIZATION = "Authorization";
   private static final String SETTINGS = "settings";
   private static final String BR = System.getProperty("line.separator");
+  private static final String BEARER = "bearer ";
+  private static final String ACESS_TOKEN = "?access_token=";
 
   private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -71,13 +73,7 @@ public class ClientController {
 
   private Environment env;
 
-  @Autowired
-  FileValidator validator;
 
-  @InitBinder("File")
-  private void initBinder(WebDataBinder binder) {
-    binder.setValidator(validator);
-  }
 
   /**
    * @param env
@@ -90,17 +86,6 @@ public class ClientController {
     this.env = env;
   }
 
-  @RequestMapping(value={"test"}, method = RequestMethod.GET, params = "upload")
-  public String getForm(ModelMap modelMap, HttpServletRequest request, HttpServletResponse response) throws IOException {
-    File fileModel = new File();
-    modelMap.addAttribute("file", fileModel);
-    return "oauth-client";
-  }
-
-  @RequestMapping(value={"test"}, method = RequestMethod.POST, params = "upload")
-  public String fileUploaded(ModelMap modelMap, HttpServletRequest request, HttpServletResponse response) throws IOException {
-    return "oauth-client";
-  }
 
   @RequestMapping(value = {"test"}, method = RequestMethod.GET)
   public String start(ModelMap modelMap, HttpServletRequest request, HttpServletResponse response)
@@ -119,7 +104,7 @@ public class ClientController {
 
   @RequestMapping(value = "test", method = RequestMethod.POST, params = "step1")
   public String step1(ModelMap modelMap, @ModelAttribute("settings")
-  ClientSettings settings, HttpServletRequest request, HttpServletResponse response) throws IOException {
+  ClientSettings settings) throws IOException {
     LOG.debug("Hitting step1");
     settings.setStep("step2");
     modelMap.addAttribute(SETTINGS, settings);
@@ -128,14 +113,14 @@ public class ClientController {
 
   @RequestMapping(value = "test", method = RequestMethod.POST, params = "step2")
   public void step2(ModelMap modelMap, @ModelAttribute("settings")
-  ClientSettings settings, HttpServletRequest request, HttpServletResponse response) throws IOException {
+  ClientSettings settings, HttpServletResponse response) throws IOException {
     LOG.debug("Hitting step2");
     LOG.debug("Redirect Uri is: {}", env.getProperty("redirect_uri"));
     response.sendRedirect(settings.getAuthorizationURLComplete());
   }
 
   @RequestMapping(value = "redirect", method = RequestMethod.GET)
-  public String redirect(ModelMap modelMap, HttpServletRequest request, HttpServletResponse response)
+  public String redirect(ModelMap modelMap, HttpServletRequest request)
           throws JsonParseException, JsonMappingException, IOException {
     LOG.debug("Hitting redirect");
     String code = request.getParameter("code");
@@ -168,10 +153,10 @@ public class ClientController {
 
   @RequestMapping(value = "test", method = RequestMethod.POST, params = "step3")
   public String step3(ModelMap modelMap, @ModelAttribute("settings")
-  ClientSettings settings, HttpServletRequest request, HttpServletResponse response) throws IOException {
+  ClientSettings settings) throws IOException {
     LOG.debug("Hitting step3");
     Builder builder = client.resource(settings.getRequestURL())
-            .header(AUTHORIZATION, "bearer ".concat(settings.getAccessToken()))
+            .header(AUTHORIZATION, BEARER.concat(settings.getAccessToken()))
             .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE);
     OutBoundHeaders headers = getHeadersCopy(builder);
     ClientResponse clientResponse = builder.get(ClientResponse.class);
@@ -186,11 +171,37 @@ public class ClientController {
   }
 
 
+  @RequestMapping(value={"test"}, method = RequestMethod.POST, params = "upload")
+  public String handleFileUpload(ModelMap modelMap, @ModelAttribute("settings") ClientSettings settings) throws IOException {
+    settings.setStep("step3");
+    modelMap.put(SETTINGS, settings);
+    MultipartFile file = settings.getFileUpload();
+    String name = file.getOriginalFilename();
+    String resourceBaseUrl = env.getProperty("resource_server_base_url");
+    if(!file.isEmpty()) {
+      LOG.debug("File name: {}", name);
+      try{
+        byte[] bytes = file.getBytes();
+        Sardine sardine = SardineFactory.begin("admin", "shibboleth");
+        String tokenString = ACESS_TOKEN.concat(settings.getAccessToken());
+        sardine.put(resourceBaseUrl.concat(name).concat(tokenString), bytes);
+        modelMap.put("uploadMessage", "You successfully uploaded " + name + "! The file is saved in ownCloud.");
+        LOG.debug("File saved");
+      } catch (Exception e) {
+        modelMap.put("uploadMessage", "You failed to upload " + name + " => " + e.getMessage());
+      }
+    } else {
+      modelMap.put("uploadMessage", "You failed to upload " + name + " because the file was empty." );
+    }
+    return "oauth-client";
+  }
+
+
   private void addResponseInfo(ModelMap modelMap, ClientResponse clientResponse) {
     modelMap.put(
-            "responseInfo",
-            "Status: ".concat(String.valueOf(clientResponse.getStatus()).concat(BR).concat("Headers:")
-                    .concat(clientResponse.getHeaders().toString())));
+      "responseInfo",
+      "Status: ".concat(String.valueOf(clientResponse.getStatus()).concat(BR).concat("Headers:")
+        .concat(clientResponse.getHeaders().toString())));
   }
 
   /*
